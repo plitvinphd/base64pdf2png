@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+aiohttp
+python-dotenv
+python-multipart
+PyMuPDF
+psutil

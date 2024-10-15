@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, HttpUrl
+from fastapi.responses import StreamingResponse
 import os
 import asyncio
 import aiohttp
@@ -7,14 +8,11 @@ import logging
 from dotenv import load_dotenv
 import psutil
 import fitz
-import base64
+import zipfile
+from io import BytesIO
 
 app = FastAPI()
 
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # Use the PORT environment variable
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
 # Load environment variables
 load_dotenv()
 
@@ -92,19 +90,23 @@ async def convert_pdf(pdf: PDFUrl):
     pdf_bytes = await download_pdf(str(pdf.url))
     image_bytes_list = await convert_pdf_to_images(pdf_bytes)
 
-    # Base64 encode images with labels
-    base64_images = []
-    for page_num, image_bytes in image_bytes_list:
-        encoded_image = base64.b64encode(image_bytes).decode('utf-8')
-        base64_images.append({
-            "page": page_num,
-            "image_data": encoded_image
-        })
-
-    if not base64_images:
+    if not image_bytes_list:
         raise HTTPException(status_code=500, detail="No images were generated.")
 
-    return {"images": base64_images}
+    # Create ZIP file in memory
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for page_num, image_bytes in image_bytes_list:
+            # Save each image in the ZIP with a filename like 'page_1.png', 'page_2.png', etc.
+            zip_file.writestr(f'page_{page_num}.png', image_bytes)
+
+    # Make sure to seek to the start of the buffer before sending it
+    zip_buffer.seek(0)
+
+    # Return the ZIP file as a streaming response
+    return StreamingResponse(zip_buffer, media_type="application/zip", headers={
+        "Content-Disposition": "attachment; filename=converted_pages.zip"
+    })
 
 
 @app.get("/health")

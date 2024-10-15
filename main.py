@@ -83,7 +83,13 @@ async def convert_pdf_to_images(pdf_bytes: bytes):
     except Exception as e:
         logging.error(f"Error converting PDF to images: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error converting PDF to images.")
-
+        
+# Create a background task that delays the memory cleanup
+async def delayed_cleanup(zip_buffer):
+    # Sleep for 10 minutes (600 seconds)
+    await asyncio.sleep(600)
+    zip_buffer.close()  # Close the BytesIO object
+    print("ZIP buffer closed and memory released after 10 minutes.")
 
 @app.post("/convert-pdf")
 async def convert_pdf(pdf: PDFUrl):
@@ -102,7 +108,10 @@ async def convert_pdf(pdf: PDFUrl):
 
     # Make sure to seek to the start of the buffer before sending it
     zip_buffer.seek(0)
-
+    
+    # Start the delayed cleanup task in the background
+    asyncio.create_task(delayed_cleanup(zip_buffer))
+    
     # Return the ZIP file as a streaming response
     return StreamingResponse(zip_buffer, media_type="application/zip", headers={
         "Content-Disposition": "attachment; filename=converted_pages.zip"

@@ -11,11 +11,6 @@ import base64
 
 app = FastAPI()
 
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # Use the PORT environment variable
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
-
 # Load environment variables
 load_dotenv()
 
@@ -67,7 +62,7 @@ async def convert_pdf_to_images(pdf_bytes: bytes):
         log_resource_usage("Before Conversion")
         image_bytes_list = []
         MAX_PAGE_COUNT = 5000  # Limit the number of pages to process
-        DPI = 100  # Set DPI to reduce resource usage
+        DPI = 71  # Set DPI to reduce resource usage
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
             page_count = doc.page_count
             logging.info(f"PDF has {page_count} pages.")
@@ -111,4 +106,3 @@ async def convert_pdf(pdf: PDFUrl):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-

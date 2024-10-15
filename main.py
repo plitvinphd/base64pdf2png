@@ -64,7 +64,7 @@ async def convert_pdf_to_images(pdf_bytes: bytes):
         log_resource_usage("Before Conversion")
         image_bytes_list = []
         MAX_PAGE_COUNT = 5000  # Limit the number of pages to process
-        DPI = 100  # Set DPI to reduce resource usage
+        DPI = 200  # Set DPI to reduce resource usage
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
             page_count = doc.page_count
             logging.info(f"PDF has {page_count} pages.")

@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 aiohttp
+pydantic
 python-dotenv
-python-multipart
-PyMuPDF
 psutil
+PyMuPDF

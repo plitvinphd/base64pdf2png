@@ -1,22 +1,20 @@
-FROM python:3.9-slim
+# Use the official Python image from DockerHub
+FROM python:3.10-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0
-
-# Set working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements
+# Copy requirements.txt to the working directory
 COPY requirements.txt .
 
-# Install Python packages
+# Install the dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy the rest of the application code to the working directory
 COPY . .
 
-# Expose port (optional)
+# Expose the port that the app runs on
 EXPOSE 8000
 
-# Command to run
-CMD ["python", "main.py"]
+# Command to run the FastAPI app with uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
